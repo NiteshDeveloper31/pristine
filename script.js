@@ -1,218 +1,272 @@
 /**
- * PRISTINE AMORE - JAVASCRIPT CONTROLLER
- * Ultra-smooth interactions, modals, floorplan tabs, gallery lightbox & AJAX lead submission
+ * AMOR BY PRISTINE - LUXURY CONTROLLER & INTERACTION ENGINE
+ * Architectural Real Estate Experience Controller (v4.0)
+ * Handles Video Switchers, Floor Plan Tabs, Lightbox, Modals & AJAX Lead Dispatch
  */
 
 document.addEventListener('DOMContentLoaded', function () {
   'use strict';
 
-  // 1. Sticky Header
-  const header = document.querySelector('.site-header');
-  window.addEventListener('scroll', function () {
-    if (window.scrollY > 50) {
-      header.classList.add('scrolled');
+  // ------------------------------------------------------------------------
+  // 1. STICKY HEADER & SCROLL BEHAVIOR
+  // ------------------------------------------------------------------------
+  const siteHeader = document.getElementById('siteHeader');
+  const backToTopBtn = document.getElementById('backToTopBtn');
+
+  function handleScroll() {
+    if (window.scrollY > 40) {
+      siteHeader?.classList.add('scrolled');
     } else {
-      header.classList.remove('scrolled');
+      siteHeader?.classList.remove('scrolled');
     }
-  });
-
-  // 2. Mobile Drawer Navigation
-  const menuBtn = document.querySelector('.mobile-menu-btn');
-  const closeDrawerBtn = document.querySelector('.mobile-drawer-close');
-  const mobileDrawer = document.querySelector('.mobile-nav-drawer');
-  const mobileLinks = document.querySelectorAll('.mobile-nav-link');
-
-  if (menuBtn && mobileDrawer) {
-    menuBtn.addEventListener('click', () => mobileDrawer.classList.add('open'));
   }
-  if (closeDrawerBtn && mobileDrawer) {
-    closeDrawerBtn.addEventListener('click', () => mobileDrawer.classList.remove('open'));
-  }
-  mobileLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      if (mobileDrawer) mobileDrawer.classList.remove('open');
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll();
+
+  if (backToTopBtn) {
+    backToTopBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  }
+
+  // ------------------------------------------------------------------------
+  // 2. MOBILE NAVIGATION DRAWER
+  // ------------------------------------------------------------------------
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileDrawer = document.getElementById('mobileDrawer');
+  const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+
+  function openMobileDrawer() {
+    mobileDrawer?.classList.add('open');
+    mobileDrawer?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileDrawer() {
+    mobileDrawer?.classList.remove('open');
+    mobileDrawer?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  mobileMenuBtn?.addEventListener('click', openMobileDrawer);
+  drawerCloseBtn?.addEventListener('click', closeMobileDrawer);
+
+  mobileLinks.forEach(link => {
+    link.addEventListener('click', closeMobileDrawer);
   });
 
-  // Hero Media Switcher (Balcony Photo vs Walkthrough Video vs Teaser Video)
-  const heroSwitchBtns = document.querySelectorAll('.hero-switch-btn');
-  const heroMainImg = document.getElementById('heroMainImg');
-  const heroMainVideo = document.getElementById('heroMainVideo');
+  // ------------------------------------------------------------------------
+  // 3. CINEMATIC HERO MEDIA SWITCHER
+  // ------------------------------------------------------------------------
+  const switcherBtns = document.querySelectorAll('.switcher-btn');
+  const heroBgImage = document.getElementById('heroBgImage');
+  const heroBgVideo = document.getElementById('heroBgVideo');
 
-  if (heroSwitchBtns.length && heroMainImg && heroMainVideo) {
-    heroSwitchBtns.forEach(btn => {
+  if (switcherBtns.length && heroBgImage && heroBgVideo) {
+    switcherBtns.forEach(btn => {
       btn.addEventListener('click', function () {
-        heroSwitchBtns.forEach(b => b.classList.remove('active'));
+        switcherBtns.forEach(b => b.classList.remove('active'));
         this.classList.add('active');
 
         const mediaType = this.getAttribute('data-type');
-        if (mediaType === 'photo') {
-          heroMainImg.style.display = 'block';
-          heroMainVideo.classList.remove('active');
-          heroMainVideo.style.display = 'none';
-          heroMainVideo.pause();
-        } else if (mediaType === 'video') {
-          const videoSrc = this.getAttribute('data-src');
-          heroMainImg.style.display = 'none';
-          heroMainVideo.classList.add('active');
-          heroMainVideo.style.display = 'block';
+        const mediaSrc = this.getAttribute('data-src');
 
-          // Switch video source if needed
-          if (videoSrc && (!heroMainVideo.src.includes(videoSrc))) {
-            heroMainVideo.src = videoSrc;
-            heroMainVideo.load();
+        if (mediaType === 'photo') {
+          heroBgVideo.pause();
+          heroBgVideo.classList.remove('active');
+          heroBgImage.classList.add('active');
+          if (mediaSrc) heroBgImage.src = mediaSrc;
+        } else if (mediaType === 'video') {
+          heroBgImage.classList.remove('active');
+          heroBgVideo.classList.add('active');
+          
+          if (mediaSrc && !heroBgVideo.src.includes(mediaSrc)) {
+            heroBgVideo.src = mediaSrc;
+            heroBgVideo.load();
           }
-          heroMainVideo.play().catch(e => console.log('Video play allowed'));
+          heroBgVideo.play().catch(e => console.log('Autoplay handled'));
         }
       });
     });
   }
 
-  // 3. Tab Switching (Floor Plans)
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabPanes = document.querySelectorAll('.tab-pane');
+  // ------------------------------------------------------------------------
+  // 4. ARCHITECTURAL FLOOR PLAN TABS
+  // ------------------------------------------------------------------------
+  const archTabBtns = document.querySelectorAll('.arch-tab-btn');
+  const archTabPanes = document.querySelectorAll('.arch-tab-pane');
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', function () {
-      const targetId = this.getAttribute('data-tab');
+  if (archTabBtns.length && archTabPanes.length) {
+    archTabBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const targetId = this.getAttribute('data-tab');
 
-      tabBtns.forEach(b => b.classList.remove('active'));
-      tabPanes.forEach(p => p.classList.remove('active'));
+        archTabBtns.forEach(b => b.classList.remove('active'));
+        archTabPanes.forEach(p => p.classList.remove('active'));
 
-      this.classList.add('active');
-      const targetPane = document.getElementById(targetId);
-      if (targetPane) {
-        targetPane.classList.add('active');
-      }
+        this.classList.add('active');
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) {
+          targetPane.classList.add('active');
+        }
+      });
+    });
+  }
+
+  // ------------------------------------------------------------------------
+  // 5. VIRTUAL SITE VISIT VIDEO SWITCHER
+  // ------------------------------------------------------------------------
+  const videoPillBtns = document.querySelectorAll('.video-pill-btn');
+  const featuredVideoPlayer = document.getElementById('featuredVideoPlayer');
+  const videoBadgeOverlay = document.getElementById('videoBadgeOverlay');
+
+  if (videoPillBtns.length && featuredVideoPlayer) {
+    videoPillBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        videoPillBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        const videoSrc = this.getAttribute('data-video');
+        if (videoSrc && !featuredVideoPlayer.src.includes(videoSrc)) {
+          featuredVideoPlayer.src = videoSrc;
+          featuredVideoPlayer.load();
+          featuredVideoPlayer.play().catch(e => console.log('Video play allowed'));
+        }
+
+        if (videoBadgeOverlay) {
+          videoBadgeOverlay.textContent = videoSrc.includes('teaser')
+            ? 'CINEMATIC TEASER FILM'
+            : '4K ULTRA HD ARCHITECTURAL WALKTHROUGH';
+        }
+      });
+    });
+  }
+
+  // ------------------------------------------------------------------------
+  // 6. IMAGE & BLUEPRINT LIGHTBOX ENGINE
+  // ------------------------------------------------------------------------
+  const imageLightbox = document.getElementById('imageLightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCloseBtn = document.getElementById('lightboxCloseBtn');
+
+  function openLightbox(src, altText) {
+    if (imageLightbox && lightboxImg && src) {
+      lightboxImg.src = src;
+      lightboxImg.alt = altText || 'Architectural View';
+      imageLightbox.classList.add('active');
+      imageLightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeLightbox() {
+    if (imageLightbox) {
+      imageLightbox.classList.remove('active');
+      imageLightbox.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+  }
+
+  lightboxCloseBtn?.addEventListener('click', closeLightbox);
+
+  imageLightbox?.addEventListener('click', function (e) {
+    if (e.target === imageLightbox) {
+      closeLightbox();
+    }
+  });
+
+  // Attach Lightbox triggers to all elements with data-lightbox="true"
+  document.querySelectorAll('[data-lightbox="true"]').forEach(el => {
+    el.addEventListener('click', function () {
+      const src = this.getAttribute('data-img') || this.querySelector('img')?.src;
+      const altText = this.querySelector('img')?.alt || 'Pristine Amore Visual';
+      if (src) openLightbox(src, altText);
     });
   });
 
-  // 4. Modal Controller (Enquiry / Brochure / Pricing)
-  const modalOverlay = document.getElementById('enquiryModal');
-  const modalCloseBtn = document.querySelector('.modal-close-btn');
+  // ------------------------------------------------------------------------
+  // 7. VIP MODAL CONSULTATION & LEAD DIALOG
+  // ------------------------------------------------------------------------
+  const enquiryModal = document.getElementById('enquiryModal');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
   const modalTitle = document.getElementById('modalTitle');
   const modalSubtitle = document.getElementById('modalSubtitle');
-  const modalForm = document.getElementById('modalEnquiryForm');
   const modalLeadSource = document.getElementById('modalLeadSource');
 
   function openEnquiryModal(source, title, subtitle) {
-    if (modalOverlay) {
+    if (enquiryModal) {
       if (modalLeadSource) modalLeadSource.value = source || 'General Enquiry';
-      if (modalTitle) modalTitle.innerText = title || 'Exclusive VIP Access';
-      if (modalSubtitle) modalSubtitle.innerText = subtitle || 'Enter your details to receive instant pricing and brochures.';
-      modalOverlay.classList.add('active');
+      if (modalTitle) modalTitle.innerText = title || 'Request Private VIP Consultation';
+      if (modalSubtitle) modalSubtitle.innerText = subtitle || 'Enter your details below to receive the complete confidential project dossier.';
+      
+      enquiryModal.classList.add('active');
+      enquiryModal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
     }
   }
 
   function closeEnquiryModal() {
-    if (modalOverlay) {
-      modalOverlay.classList.remove('active');
+    if (enquiryModal) {
+      enquiryModal.classList.remove('active');
+      enquiryModal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
     }
   }
 
-  if (modalCloseBtn) {
-    modalCloseBtn.addEventListener('click', closeEnquiryModal);
-  }
+  modalCloseBtn?.addEventListener('click', closeEnquiryModal);
 
-  if (modalOverlay) {
-    modalOverlay.addEventListener('click', function (e) {
-      if (e.target === modalOverlay) {
-        closeEnquiryModal();
-      }
-    });
-  }
+  enquiryModal?.addEventListener('click', function (e) {
+    if (e.target === enquiryModal) {
+      closeEnquiryModal();
+    }
+  });
 
-  // Bind all CTA buttons with data-modal trigger
-  document.querySelectorAll('[data-open-modal]').forEach(btn => {
+  // Keyboard Escape Key to close any active modal
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeLightbox();
+      closeEnquiryModal();
+      closeMobileDrawer();
+    }
+  });
+
+  // Bind all CTA buttons with data-open-modal="true"
+  document.querySelectorAll('[data-open-modal="true"]').forEach(btn => {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
-      const source = this.getAttribute('data-source') || 'Enquiry Button';
+      const source = this.getAttribute('data-source') || 'CTA Button';
       const title = this.getAttribute('data-title') || 'Book Private Site Visit';
       const subtitle = this.getAttribute('data-subtitle') || 'Our luxury residence manager will get in touch shortly.';
       openEnquiryModal(source, title, subtitle);
     });
   });
 
-  // 5. Image & Floor Plan Lightbox
-  const lightbox = document.getElementById('imageLightbox');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const lightboxClose = document.querySelector('.lightbox-close');
-
-  function openLightbox(imgSrc) {
-    if (lightbox && lightboxImg) {
-      lightboxImg.src = imgSrc;
-      lightbox.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  }
-
-  function closeLightbox() {
-    if (lightbox) {
-      lightbox.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-  }
-
-  if (lightboxClose) {
-    lightboxClose.addEventListener('click', closeLightbox);
-  }
-
-  if (lightbox) {
-    lightbox.addEventListener('click', function (e) {
-      if (e.target === lightbox) closeLightbox();
-    });
-  }
-
-  document.querySelectorAll('[data-lightbox]').forEach(item => {
-    item.addEventListener('click', function () {
-      const src = this.getAttribute('data-img') || this.querySelector('img')?.src;
-      if (src) openLightbox(src);
-    });
-  });
-
-  // 6. Video Switcher (Walkthrough vs Teaser)
-  const videoPlayer = document.getElementById('featuredVideoPlayer');
-  const videoTabBtns = document.querySelectorAll('.video-tab-btn');
-
-  if (videoPlayer && videoTabBtns.length) {
-    videoTabBtns.forEach(btn => {
-      btn.addEventListener('click', function () {
-        videoTabBtns.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        const videoSrc = this.getAttribute('data-video');
-        if (videoSrc) {
-          videoPlayer.src = videoSrc;
-          videoPlayer.load();
-          videoPlayer.play().catch(e => console.log('Autoplay blocked'));
-        }
-      });
-    });
-  }
-
-  // 7. Lead Form Submission (AJAX to send-mail.php)
-  function handleFormSubmit(form) {
+  // ------------------------------------------------------------------------
+  // 8. ASYNCHRONOUS LEAD SUBMISSION (AJAX -> send-mail.php)
+  // ------------------------------------------------------------------------
+  function handleFormSubmission(form) {
     const feedbackEl = form.querySelector('.form-feedback');
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.innerHTML;
 
-    // Validate inputs
+    // Validate 10-digit mobile number
     const phoneInput = form.querySelector('input[type="tel"]');
     if (phoneInput) {
-      const phoneVal = phoneInput.value.replace(/[^0-9]/g, '');
-      if (phoneVal.length < 10) {
-        showFeedback(feedbackEl, 'Please enter a valid 10-digit mobile number.', 'error');
+      const cleanedPhone = phoneInput.value.replace(/[^0-9]/g, '');
+      if (cleanedPhone.length < 10) {
+        displayFeedback(feedbackEl, 'Please enter a valid 10-digit mobile number.', 'error');
+        phoneInput.focus();
         return;
       }
     }
 
-    // Prepare data
     const formData = new FormData(form);
 
-    // Show loading state
+    // Set Loading State
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+    submitBtn.innerHTML = '<span>Verifying & Sending...</span>';
     if (feedbackEl) feedbackEl.style.display = 'none';
 
     fetch('send-mail.php', {
@@ -225,73 +279,69 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.innerHTML = originalBtnText;
 
         if (data.status === 'success') {
-          showFeedback(feedbackEl, data.message || 'Thank you! Your enquiry has been received.', 'success');
+          displayFeedback(feedbackEl, data.message || 'VIP Request Confirmed. Redirecting...', 'success');
           form.reset();
 
-          // If source was brochure download, trigger download
-          const source = formData.get('source') || '';
-          if (source.toLowerCase().includes('brochure')) {
-            setTimeout(() => {
-              const downloadLink = document.createElement('a');
-              downloadLink.href = 'assets/docs/Pristine_Amore_Brochure.pdf';
-              downloadLink.download = 'Pristine_Amore_Brochure.pdf';
-              document.body.appendChild(downloadLink);
-              downloadLink.click();
-              downloadLink.remove();
-            }, 800);
-          }
+          const source = (formData.get('source') || '').toLowerCase();
+          const shouldDownload = (source.includes('brochure') || source.includes('dossier')) ? 'true' : 'false';
+          const refId = data.submission_id || ('PA-' + Math.random().toString(36).substr(2, 6).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900));
 
-          // Auto-close modal after 2.5s if inside modal
-          if (form.closest('.modal-overlay')) {
-            setTimeout(() => {
-              closeEnquiryModal();
-              if (feedbackEl) feedbackEl.style.display = 'none';
-            }, 2500);
-          }
+          // Redirect to Thank You page
+          setTimeout(() => {
+            window.location.href = `thank-you.html?ref=${encodeURIComponent(refId)}&download=${shouldDownload}`;
+          }, 600);
         } else {
-          showFeedback(feedbackEl, data.message || 'Failed to submit. Please try again.', 'error');
+          displayFeedback(feedbackEl, data.message || 'Submission failed. Please check your inputs.', 'error');
         }
       })
       .catch(err => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalBtnText;
-        if (window.location.protocol === 'file:') {
-          showFeedback(feedbackEl, 'Local file preview detected (file://). PHP scripts cannot execute without a web server. Please upload to your PHP hosting server or run via local server to test email dispatch.', 'error');
-        } else {
-          showFeedback(feedbackEl, 'Thank you! We have received your request and will contact you shortly.', 'success');
-          form.reset();
-        }
+
+        const source = (formData.get('source') || '').toLowerCase();
+        const shouldDownload = (source.includes('brochure') || source.includes('dossier')) ? 'true' : 'false';
+        const refId = 'PA-' + Math.random().toString(36).substr(2, 6).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
+
+        displayFeedback(feedbackEl, 'Thank you! Redirecting to confirmation page...', 'success');
+        form.reset();
+
+        // Graceful redirect to Thank You page across all environments
+        setTimeout(() => {
+          window.location.href = `thank-you.html?ref=${encodeURIComponent(refId)}&download=${shouldDownload}`;
+        }, 600);
       });
   }
 
-  function showFeedback(el, msg, type) {
+  function displayFeedback(el, message, type) {
     if (!el) return;
     el.className = 'form-feedback ' + type;
-    el.innerText = msg;
+    el.innerText = message;
     el.style.display = 'block';
   }
 
-  // Bind Hero Form and Modal Form
+  // Bind Form Listeners
   const heroForm = document.getElementById('heroEnquiryForm');
-  if (heroForm) {
-    heroForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      handleFormSubmit(this);
-    });
-  }
+  heroForm?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    handleFormSubmission(this);
+  });
 
-  if (modalForm) {
-    modalForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      handleFormSubmit(this);
-    });
-  }
+  const modalForm = document.getElementById('modalEnquiryForm');
+  modalForm?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    handleFormSubmission(this);
+  });
 
-  // 8. Auto Popup after 20 seconds (once per session)
-  if (!sessionStorage.getItem('amore_popup_shown')) {
-    setTimeout(() => {
-      openEnquiryModal('Automated VIP Welcome', 'Unlock Exclusive Launch Privileges', 'Get special pre-launch pricing and priority inventory allotment.');
-      sessionStorage.setItem('amore_popup_shown', 'true');
-    }, 20000);
-  }
+  // ------------------------------------------------------------------------
+  // 9. AUTOMATIC VIP ENQUIRY POPUP (AUTO-OPEN AFTER 3 SECONDS)
+  // ------------------------------------------------------------------------
+  setTimeout(() => {
+    openEnquiryModal(
+      'Automated VIP Welcome Trigger',
+      'Exclusive Pre-Launch Opportunity',
+      'Register your details below to receive the complete confidential cost sheet, CAD floor plans & priority inventory allocation.'
+    );
+  }, 3000);
+
+  console.log('Amor by Pristine - Luxury Experience Engine Initialized.');
 });
